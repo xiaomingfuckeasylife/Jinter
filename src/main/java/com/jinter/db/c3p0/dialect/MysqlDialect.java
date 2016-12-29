@@ -1,8 +1,11 @@
 package com.jinter.db.c3p0.dialect;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import com.jinter.core.Table;
@@ -19,19 +22,26 @@ import com.jinter.kit.PropKit;
  *         Dec 29, 2016
  */
 public class MysqlDialect implements Dialect {
-	
+
 	private Logger logger = Logger.getLogger("MysqlDialect");
-	
+
 	private DateSource dataSource;
 
 	private Connection conn;
 
 	public MysqlDialect() {
-
 		this(null, null, null, null);
-
 	}
 
+	/**
+	 * init mysql dialect . first we will try to find Jinter.properties file .
+	 * if not exist . then searching for application.properties.
+	 * 
+	 * @param maxStatements
+	 * @param minPoolSize
+	 * @param acquireIncrement
+	 * @param maxPoolSize
+	 */
 	public MysqlDialect(Integer maxStatements, Integer minPoolSize, Integer acquireIncrement, Integer maxPoolSize) {
 
 		String driverClass = "com.mysql.jdbc.Driver";
@@ -40,6 +50,9 @@ public class MysqlDialect implements Dialect {
 			fileName = "Jinter.properties";
 		} else if (PathKit.hasFile("application.properties")) {
 			fileName = "application.properties";
+		} else {
+			throw new IllegalArgumentException(
+					"can not find file Jinter.properties or application.properties. please add config file first ");
 		}
 		String jdbcUrl = (String) PropKit.use(fileName, "jdbcUrl");
 		String user = (String) (PropKit.use(fileName, "user") == null ? PropKit.use(fileName, "username")
@@ -52,9 +65,9 @@ public class MysqlDialect implements Dialect {
 	}
 
 	/**
-	 * jsonStr : {\
-	 * "tableName\":\"test\",\"jsonData\":[{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1,\"columnValue\":1},{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0,\"columnValue\":\"xiaoming\"
-	 * }]}
+	 * json example : <code> {\
+	 * "tableName\":\"test\",\"jsonData\":[[{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1,\"columnValue\":1},{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0,\"columnValue\":\"xiaoming\"}],[{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1,\"columnValue\":1},{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0,\"columnValue\":\"xiaoming\"
+	 * }]]} <code/>
 	 * 
 	 * @param jsonStr
 	 * @return
@@ -93,9 +106,9 @@ public class MysqlDialect implements Dialect {
 			String sql = "select * from " + MysqlDialectHelper.getTableName(jsonStr) + " where 1 = 2";
 			logger.info(ConstKit.SQL_FORMAT + sql);
 			st.executeQuery(sql);
-			
+
 		} catch (SQLException e) {
-			System.err.println(e.getMessage());
+			System.err.println(e.getMessage() + "starting to create");
 			return false;
 		} finally {
 			if (st != null) {
@@ -108,15 +121,44 @@ public class MysqlDialect implements Dialect {
 		return true;
 	}
 	
-	public static void main(String[] args) {
+	/**
+	 * put json data into database
+	 * @param jsonStr
+	 */
+	@SuppressWarnings("rawtypes")
+	public void putData(String jsonStr) {
 
-		String jsonStr = "{\"tableName\":\"test\",\"jsonData\":[{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1,\"columnValue\":1},{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0,\"columnValue\":\"xiaoming\"}]}";
+		List<Map> listMap = MysqlDialectHelper.fetchDataList(jsonStr);
+		String sql = MysqlDialectHelper.genInsertSql(listMap, MysqlDialectHelper.getTableName(jsonStr));
+		logger.info(ConstKit.SQL_FORMAT + sql);
+		PreparedStatement ps = null;
+		try {
+			ps = conn.prepareStatement(sql);
+			ps.executeUpdate();
+			conn.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			if (ps != null && conn != null) {
+				try {
+					ps.close();
+					conn.close();
+				} catch (SQLException e) {
+				}
+			}
+		}
+	}
+	
+	public static void main(String[] args) {
+		String jsonStr = "{\"tableName\":\"test\",\"jsonData\":[[{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1,\"columnValue\":1},{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0,\"columnValue\":\"xiaoming\"}],[{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1,\"columnValue\":2},{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0,\"columnValue\":\"xiaoming\"}]]}";
 		MysqlDialect mysqlDialect = new MysqlDialect();
-		if(mysqlDialect.isTableExist(jsonStr)){
-			System.out.println("table already exist");
-		}else{
+		if (mysqlDialect.isTableExist(jsonStr)) {
+
+			System.out.println("table already exist starting to put data");
+			mysqlDialect.putData(jsonStr);
+		} else {
 			mysqlDialect.buildSimpleTable(jsonStr);
 		}
-		
 	}
+	
 }
