@@ -16,7 +16,7 @@ the Json String standard are .
     "tableName": "Jinter", // tell Jinter what's the name that you want to create in the Db. 
     "jsonDataType": [      // tell Jinter what are the type's of these Columns.
         {
-            "isNullable": false, // so we know this column's can not be set to null 
+            "isNullable": false, // so we know this column can not be set to null 
             "columnName": "id",  // so we know this column's name is id
             "columnType": "int", // so we know this column's type is int
             "columnLength": 11,  // so we know this column's length is 11
@@ -80,7 +80,9 @@ if you want to try it on .
 here is what you need to do .
 ```
   git clone https://github.com/xiaomingfuckeasylife/Jinter.git
+  
   mvn package
+  
   cd Jinter/target/  cp Jinter.jar /yourProjectDirectory
   
 ```
