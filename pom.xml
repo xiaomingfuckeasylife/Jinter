@@ -44,5 +44,13 @@
 
 	<build>
 		<finalName>Jinter</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>Jinter.properties</exclude>
+				</excludes>
+			</resource>
+		</resources>
 	</build>
 </project>
