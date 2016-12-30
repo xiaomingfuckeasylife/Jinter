@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSON;
 import com.jinter.core.Table;
 import com.jinter.db.c3p0.C3p0DateSouce;
 import com.jinter.db.c3p0.DateSource;
+import com.jinter.exception.JinterException;
 import com.jinter.kit.ConstKit;
 import com.jinter.kit.PathKit;
 import com.jinter.kit.PropKit;
@@ -80,27 +81,26 @@ public class MysqlDialect implements Dialect {
 	 */
 	@SuppressWarnings({ "unused", "rawtypes" })
 	public boolean buildSimpleTable(String jsonStr) {
-
-		if (isTableExist(jsonStr)) {
-			return true;
-		}
-		Table table = MysqlDialectHelper.buildTable(jsonStr);
-
-		String sql = MysqlDialectHelper.genCreateTableSql(table);
-		logger.info(ConstKit.SQL_FORMAT + sql);
 		Statement statement = null;
 		try {
+			if (isTableExist(jsonStr)) {
+				return true;
+			}
+			Table table = MysqlDialectHelper.buildTable(jsonStr);
+
+			String sql = MysqlDialectHelper.genCreateTableSql(table);
+			logger.info(ConstKit.SQL_FORMAT + sql);
 			statement = conn.createStatement();
 			statement.executeUpdate(sql);
 			conn.commit();
 		} catch (SQLException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new JinterException(e.getMessage());
 		} finally {
 			if (statement != null) {
 				try {
 					statement.close();
 				} catch (SQLException e) {
-					throw new RuntimeException(e.getMessage());
+
 				}
 			}
 		}
@@ -137,19 +137,19 @@ public class MysqlDialect implements Dialect {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void putData(String jsonStr) {
-		if (false == isTableExist(jsonStr)) {
-			buildSimpleTable(jsonStr);
-		}
-		List<Map> listMap = MysqlDialectHelper.fetchDataList(jsonStr);
-		String sql = MysqlDialectHelper.genInsertSql(listMap, MysqlDialectHelper.getTableName(jsonStr));
-		logger.info(ConstKit.SQL_FORMAT + sql);
 		PreparedStatement ps = null;
 		try {
+			if (false == isTableExist(jsonStr)) {
+				buildSimpleTable(jsonStr);
+			}
+			List<Map> listMap = MysqlDialectHelper.fetchDataList(jsonStr);
+			String sql = MysqlDialectHelper.genInsertSql(listMap, MysqlDialectHelper.getTableName(jsonStr));
+			logger.info(ConstKit.SQL_FORMAT + sql);
 			ps = conn.prepareStatement(sql);
 			ps.executeUpdate();
 			conn.commit();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			throw new JinterException(e.getMessage());
 		} finally {
 			if (ps != null && conn != null) {
 				try {
@@ -160,7 +160,7 @@ public class MysqlDialect implements Dialect {
 			}
 		}
 	}
-
+	
 	public static void main(String[] args) {
 		String jsonStr = "{\"tableName\":\"test\"," + "\"jsonDataType\":" + "["
 				+ "{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1},"
@@ -173,6 +173,10 @@ public class MysqlDialect implements Dialect {
 				+ "]" + "}";
 		// System.out.println(JSON.toJSONString(jsonStr));
 		Dialect mysqlDialect = new MysqlDialect();
-		mysqlDialect.putData(jsonStr);
+		try {
+			mysqlDialect.putData(jsonStr);
+		} catch (JinterException e) {
+			System.out.println("d");
+		}
 	}
 }

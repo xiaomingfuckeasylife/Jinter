@@ -2,6 +2,7 @@ package com.jinter.core;
 
 import com.jinter.db.c3p0.dialect.Dialect;
 import com.jinter.db.c3p0.dialect.MysqlDialect;
+import com.jinter.exception.JinterException;
 /**
  * 
  * @author clark
