@@ -74,10 +74,13 @@ public class MysqlDialect implements Dialect {
 	 */
 	@SuppressWarnings({ "unused", "rawtypes" })
 	public boolean buildSimpleTable(String jsonStr) {
-
+		
+		if(isTableExist(jsonStr)){
+			return true;
+		}
 		Table table = MysqlDialectHelper.buildTable(jsonStr);
 
-		String sql = MysqlDialectHelper.createTableSql(table);
+		String sql = MysqlDialectHelper.genCreateTableSql(table);
 		logger.info(ConstKit.SQL_FORMAT + sql);
 		Statement statement = null;
 		try {
@@ -150,15 +153,26 @@ public class MysqlDialect implements Dialect {
 	}
 	
 	public static void main(String[] args) {
-		String jsonStr = "{\"tableName\":\"test\",\"jsonData\":[[{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1,\"columnValue\":1},{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0,\"columnValue\":\"xiaoming\"}],[{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1,\"columnValue\":2},{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0,\"columnValue\":\"xiaoming\"}]]}";
+		String jsonStr = "{\"tableName\":\"test\","
+				+ "\"jsonDataType\":"
+				+ "["
+				+ "{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1},"
+				+ "{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0},"
+				+ "{\"isNullable\":true,\"columnName\":\"time\",\"columnType\":\"datetime\",\"columnLength\":0,\"isPrimaryKey\":0},"
+				+ "{\"isNullable\":true,\"columnName\":\"remark\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0}"
+				+ "],"
+				+ "\"jsonDataVal\":"
+				+ "["
+				+ "[{\"id\":1} ,{ \"name\":\"xiaoming\"},{\"time\": \"2016-07-09 00:00:00\"},{\"remark\":\"hello test\"}],"
+				+ "[{\"id\":2} ,{ \"name\":\"xiaoming\"},{\"time\": \"2016-07-10 00:00:00\"},{\"remark\":\"ello test\"}]"
+				+ "]"
+				+ "}";
 		MysqlDialect mysqlDialect = new MysqlDialect();
 		if (mysqlDialect.isTableExist(jsonStr)) {
-
 			System.out.println("table already exist starting to put data");
-			mysqlDialect.putData(jsonStr);
 		} else {
 			mysqlDialect.buildSimpleTable(jsonStr);
 		}
+		mysqlDialect.putData(jsonStr);
 	}
-	
 }

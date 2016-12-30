@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.jinter.core.Column;
 import com.jinter.core.Table;
 import com.jinter.kit.ConstKit;
@@ -71,15 +72,15 @@ public class MysqlDialectHelper {
 	public static List<Map> fetchDataList(String jsonStr){
 		List<Map> listMap = new ArrayList<Map>();
 		Map jsonMap = (Map) JSON.parse(jsonStr);
-		JSONArray jsonArray = (JSONArray) jsonMap.get("jsonData");
+		JSONArray jsonArray = (JSONArray) jsonMap.get("jsonDataVal");
 		
 		for(int i=0;i<jsonArray.size();i++){
 			JSONArray jsonList = (JSONArray) jsonArray.get(i);
 			Map retMap = new LinkedHashMap();
 			for(int j=0;j<jsonList.size();j++){
-				Map map = (Map) jsonList.get(j);
-				String key = (String) map.get("columnName");
-				Object val = map.get("columnValue");
+				Map entryMap = (Map) jsonList.get(j);
+				String key = (String) entryMap.keySet().iterator().next();
+				Object val = entryMap.get(key);
 				if(StrKit.isBlank(key)){
 					throw new IllegalArgumentException("columnName can not be blank");
 				}
@@ -101,9 +102,9 @@ public class MysqlDialectHelper {
 		Map jsonMap = (Map) JSON.parse(jsonStr);
 		table.tableName = (String) jsonMap.get("tableName");
 
-		JSONArray jsonL = (JSONArray) jsonMap.get("jsonData");
+		JSONArray jsonList = (JSONArray) jsonMap.get("jsonDataType");
 		
-		JSONArray jsonList = (JSONArray) jsonL.get(0);
+//		JSONArray jsonList = (JSONArray) jsonL.get(0);
 		
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < jsonList.size(); i++) {
@@ -143,7 +144,7 @@ public class MysqlDialectHelper {
 	}
 	
 	
-	public static String createTableSql(Table table) {
+	public static String genCreateTableSql(Table table) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(" create table ").append(table.tableName).append("(");
 		List<Column> cols = table.cols;
