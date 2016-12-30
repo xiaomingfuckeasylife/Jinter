@@ -16,7 +16,7 @@ import com.jinter.db.c3p0.dialect.MysqlDialect;
  */
 public class Jinter {
 	
-	private Dialect dialect = new MysqlDialect(); // default dialect 
+	private Dialect dialect; 
 	
 	public void setDialect(Dialect dialect){
 		if(dialect == null){
@@ -29,4 +29,12 @@ public class Jinter {
 		dialect.putData(jsonStr);
 	}
 	
+	public Jinter(){
+		this.dialect = new MysqlDialect(); // default dialect
+	}
+	
+	public Jinter(String configPath){
+		
+		this.dialect = new MysqlDialect(configPath);
+	}
 }

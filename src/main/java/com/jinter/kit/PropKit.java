@@ -18,13 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class PropKit {
 	
-	/**
-	 * for example: <code>
-	 * 	Entry<String,Object> entry = new Entry<String,Object>();
-	 * 	entry.add(user,root);
-	 *  holdPropKV.put("Jinter.properties",entry);
-	 * </code>
-	 */
 	private static Map<String, Map<Object, Object>> holdPropKV = new ConcurrentHashMap<String, Map<Object, Object>>();
 
 	private static InputStream inputStream;

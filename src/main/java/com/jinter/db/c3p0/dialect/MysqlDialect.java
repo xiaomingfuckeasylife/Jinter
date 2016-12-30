@@ -30,8 +30,14 @@ public class MysqlDialect implements Dialect {
 
 	private Connection conn;
 
+	private String configPath;
+
 	public MysqlDialect() {
-		this(null, null, null, null);
+		this(null, null, null, null, null);
+	}
+
+	public MysqlDialect(String cfgPath) {
+		this(null, null, null, null, cfgPath);
 	}
 
 	/**
@@ -43,17 +49,20 @@ public class MysqlDialect implements Dialect {
 	 * @param acquireIncrement
 	 * @param maxPoolSize
 	 */
-	public MysqlDialect(Integer maxStatements, Integer minPoolSize, Integer acquireIncrement, Integer maxPoolSize) {
+	public MysqlDialect(Integer maxStatements, Integer minPoolSize, Integer acquireIncrement, Integer maxPoolSize,
+			String cfgPath) {
 
 		String driverClass = "com.mysql.jdbc.Driver";
 		String fileName = null;
-		if (PathKit.hasFile("Jinter.properties")) {
+		if (configPath != null && PathKit.hasFile(cfgPath)) {
+			fileName = cfgPath;
+		} else if (PathKit.hasFile("Jinter.properties")) {
 			fileName = "Jinter.properties";
 		} else if (PathKit.hasFile("application.properties")) {
 			fileName = "application.properties";
 		} else {
 			throw new IllegalArgumentException(
-					"can not find file Jinter.properties or application.properties. please add config file first ");
+					"can not find file Jinter.properties or application.properties. or the configured config path. please add config file first ");
 		}
 		String jdbcUrl = (String) PropKit.use(fileName, "jdbcUrl");
 		String user = (String) (PropKit.use(fileName, "user") == null ? PropKit.use(fileName, "username")
@@ -71,8 +80,8 @@ public class MysqlDialect implements Dialect {
 	 */
 	@SuppressWarnings({ "unused", "rawtypes" })
 	public boolean buildSimpleTable(String jsonStr) {
-		
-		if(isTableExist(jsonStr)){
+
+		if (isTableExist(jsonStr)) {
 			return true;
 		}
 		Table table = MysqlDialectHelper.buildTable(jsonStr);
@@ -98,7 +107,7 @@ public class MysqlDialect implements Dialect {
 
 		return true;
 	}
-	
+
 	public boolean isTableExist(String jsonStr) {
 		Statement st = null;
 		try {
@@ -120,14 +129,15 @@ public class MysqlDialect implements Dialect {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * put json data into database
+	 * 
 	 * @param jsonStr
 	 */
 	@SuppressWarnings("rawtypes")
 	public void putData(String jsonStr) {
-		if(false == isTableExist(jsonStr)){
+		if (false == isTableExist(jsonStr)) {
 			buildSimpleTable(jsonStr);
 		}
 		List<Map> listMap = MysqlDialectHelper.fetchDataList(jsonStr);
@@ -150,23 +160,18 @@ public class MysqlDialect implements Dialect {
 			}
 		}
 	}
-	
+
 	public static void main(String[] args) {
-		String jsonStr = "{\"tableName\":\"test\","
-				+ "\"jsonDataType\":"
-				+ "["
+		String jsonStr = "{\"tableName\":\"test\"," + "\"jsonDataType\":" + "["
 				+ "{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1},"
 				+ "{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0},"
 				+ "{\"isNullable\":true,\"columnName\":\"time\",\"columnType\":\"datetime\",\"columnLength\":0,\"isPrimaryKey\":0},"
 				+ "{\"isNullable\":true,\"columnName\":\"remark\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0}"
-				+ "],"
-				+ "\"jsonDataVal\":"
-				+ "["
+				+ "]," + "\"jsonDataVal\":" + "["
 				+ "[{\"id\":1} ,{ \"name\":\"xiaoming\"},{\"time\": \"2016-07-09 00:00:00\"},{\"remark\":\"hello test\"}],"
 				+ "[{\"id\":2} ,{ \"name\":\"xiaoming\"},{\"time\": \"2016-07-10 00:00:00\"},{\"remark\":\"ello test\"}]"
-				+ "]"
-				+ "}";
-//		System.out.println(JSON.toJSONString(jsonStr));
+				+ "]" + "}";
+		// System.out.println(JSON.toJSONString(jsonStr));
 		Dialect mysqlDialect = new MysqlDialect();
 		mysqlDialect.putData(jsonStr);
 	}
