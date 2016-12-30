@@ -143,7 +143,6 @@ public class MysqlDialectHelper {
 		return table;
 	}
 	
-	
 	public static String genCreateTableSql(Table table) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(" create table ").append(table.tableName).append("(");

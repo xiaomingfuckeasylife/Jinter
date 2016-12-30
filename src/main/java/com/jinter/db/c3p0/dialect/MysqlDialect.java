@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.alibaba.fastjson.JSON;
 import com.jinter.core.Table;
 import com.jinter.db.c3p0.C3p0DateSouce;
 import com.jinter.db.c3p0.DateSource;
@@ -65,10 +66,6 @@ public class MysqlDialect implements Dialect {
 	}
 
 	/**
-	 * json example : <code> {\
-	 * "tableName\":\"test\",\"jsonData\":[[{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1,\"columnValue\":1},{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0,\"columnValue\":\"xiaoming\"}],[{\"isNullable\":false,\"columnName\":\"id\",\"columnType\":\"int\",\"columnLength\":11,\"isPrimaryKey\":1,\"columnValue\":1},{\"isNullable\":true,\"columnName\":\"name\",\"columnType\":\"varchar\",\"columnLength\":256,\"isPrimaryKey\":0,\"columnValue\":\"xiaoming\"
-	 * }]]} <code/>
-	 * 
 	 * @param jsonStr
 	 * @return
 	 */
@@ -130,7 +127,9 @@ public class MysqlDialect implements Dialect {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void putData(String jsonStr) {
-
+		if(false == isTableExist(jsonStr)){
+			buildSimpleTable(jsonStr);
+		}
 		List<Map> listMap = MysqlDialectHelper.fetchDataList(jsonStr);
 		String sql = MysqlDialectHelper.genInsertSql(listMap, MysqlDialectHelper.getTableName(jsonStr));
 		logger.info(ConstKit.SQL_FORMAT + sql);
@@ -167,12 +166,8 @@ public class MysqlDialect implements Dialect {
 				+ "[{\"id\":2} ,{ \"name\":\"xiaoming\"},{\"time\": \"2016-07-10 00:00:00\"},{\"remark\":\"ello test\"}]"
 				+ "]"
 				+ "}";
-		MysqlDialect mysqlDialect = new MysqlDialect();
-		if (mysqlDialect.isTableExist(jsonStr)) {
-			System.out.println("table already exist starting to put data");
-		} else {
-			mysqlDialect.buildSimpleTable(jsonStr);
-		}
+//		System.out.println(JSON.toJSONString(jsonStr));
+		Dialect mysqlDialect = new MysqlDialect();
 		mysqlDialect.putData(jsonStr);
 	}
 }

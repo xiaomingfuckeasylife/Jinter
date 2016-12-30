@@ -6,5 +6,7 @@ package com.jinter.db.c3p0.dialect;
  * Dec 29, 2016
  */
 public interface Dialect {
-
+	
+	public void putData(String jsonStr);
+	
 }
