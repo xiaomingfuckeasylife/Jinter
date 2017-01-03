@@ -26,7 +26,7 @@ public class PropKit {
 	/**
 	 * using fileName to find property key's value . for example :
 	 * <code> PropKit.use("conf/Jinter.properties", "user") <code>
-	 * 
+	 * after that . cache all the properties from file . 
 	 * @param fileName
 	 * @param key
 	 * @return
@@ -67,12 +67,13 @@ public class PropKit {
 	}
 
 	/**
-	 * find properties from specific file
+	 * find properties from cache . 
 	 * 
 	 * @param fileName
 	 * @param key
-	 * @return
+	 * @return  null if not exist in cache . 
 	 */
+	@SuppressWarnings("rawtypes")
 	public static Object find(String fileName, String key) {
 
 		Map m = ((Map) (holdPropKV.get(fileName)));

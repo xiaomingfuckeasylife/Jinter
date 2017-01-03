@@ -14,5 +14,6 @@ public class Column {
 	public Integer isPrimaryKey; //  0 means not primary key , 1 means primary key.
 	public Boolean isNullable ; // column is nullable 
 	
+	public String fkTableAndColumn; // foreign primary key . foreign table and tableColumn separated by ","
 	
 }
